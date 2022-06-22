@@ -1,9 +1,17 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
 #from data import Articles
 from flask_mysqldb import MySQL
+from pandas.io.json import json_normalize
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
+import pandas as pd
+import matplotlib as plt
+import os
+
+import json
+import urllib.request
+
 
 app = Flask(__name__)
 
@@ -275,6 +283,49 @@ def delete_article(id):
     flash('Article Deleted', 'success')
 
     return redirect(url_for('dashboard'))
+
+# @app.route('/dash', methods = ['GET', 'POST'])
+# def dash():
+#     if request.method == 'POST':
+#         variable = request.form['variable']
+#         # data = pd.read_csv("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/Crushers.csv")
+#
+#         columns = ['age', 'week', 'opp', 'ACscr', 'OPPscr', 'location']
+#         df = pd.read_csv('C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/Crushers.csv', names=columns)
+#
+#         # This you can change it to whatever you want to get
+#         age_15 = df[df['age'] == 'U15']
+#         # Other examples:
+#         bye = df[df['opp'] == 'Bye']
+#         crushed_team = df[df['ACscr'] == '0']
+#         crushed_visitor = df[df['OPPscr'] == '0']
+#         # Play with this
+#
+#         # Use the .to_html() to get your table in html
+#         print(crushed_visitor.to_html())
+#
+#         return render_template('img.html', chart=crushed_visitor.to_html())
+#
+#     return render_template('dash.html')
+
+@app.route('/dash', methods = ['GET', 'POST'])
+def dash():
+    if request.method == 'POST':
+        variable = request.form['variable']
+        # data = pd.read_csv("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/Crushers.csv")
+
+        with urllib.request.urlopen("http://api.openweathermap.org/data/2.5/find?q=Palo+Alto&units=metrics&type=accurate&mode=csv&APPID=7d5accb7446c447a519bf74d18da15bb") as url:
+            output = json.load(url)
+
+
+
+
+
+        return render_template('img.html', chart=output )
+
+    return render_template('dash.html')
+
+
 
 if __name__ == '__main__':
     app.secret_key='secret123'
