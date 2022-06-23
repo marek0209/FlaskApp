@@ -1,5 +1,5 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
-#from data import Articles
+# from data import Citys
 from flask_mysqldb import MySQL
 from pandas.io.json import json_normalize
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
@@ -8,10 +8,12 @@ from functools import wraps
 import pandas as pd
 import matplotlib as plt
 import os
+import json
+import numpy as np
+import datetime
 
 import json
 import urllib.request
-
 
 app = Flask(__name__)
 
@@ -24,7 +26,8 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 # init MYSQL
 mysql = MySQL(app)
 
-#Articles = Articles()
+
+# Citys = Citys()
 
 # Index
 @app.route('/')
@@ -38,38 +41,44 @@ def about():
     return render_template('about.html')
 
 
-# Articles
-@app.route('/articles')
-def articles():
+# Citys
+@app.route('/citys')
+def citys():
     # Create cursor
     cur = mysql.connection.cursor()
 
-    # Get articles
-    result = cur.execute("SELECT * FROM articles")
+    # Get citys
+    result = cur.execute("SELECT * FROM citys")
 
-    articles = cur.fetchall()
+    citys = cur.fetchall()
 
     if result > 0:
-        return render_template('articles.html', articles=articles)
+        return render_template('citys.html', citys=citys)
     else:
-        msg = 'No Articles Found'
-        return render_template('articles.html', msg=msg)
+        msg = 'No Citys Found'
+        return render_template('citys.html', msg=msg)
     # Close connection
     cur.close()
 
 
-#Single Article
-@app.route('/article/<string:id>/')
-def article(id):
+# Single City
+@app.route('/city/<string:id>/')
+def city(id):
     # Create cursor
     cur = mysql.connection.cursor()
 
-    # Get article
-    result = cur.execute("SELECT * FROM articles WHERE id = %s", [id])
+    # Get city
+    result = cur.execute("SELECT * FROM citys WHERE id = %s", [id])
 
-    article = cur.fetchone()
+    city = cur.fetchone()
 
-    return render_template('article.html', article=article)
+    from geopy.geocoders import Nominatim
+    address = city['title']
+    geolocator = Nominatim(user_agent="Your_Name")
+    location = geolocator.geocode(address)
+    print((location.latitude, location.longitude))
+
+    return render_template('city.html', city=city, la=location.latitude, lo=location.longitude)
 
 
 # Register Form Class
@@ -98,7 +107,8 @@ def register():
         cur = mysql.connection.cursor()
 
         # Execute query
-        cur.execute("INSERT INTO users(name, email, username, password) VALUES(%s, %s, %s, %s)", (name, email, username, password))
+        cur.execute("INSERT INTO users(name, email, username, password) VALUES(%s, %s, %s, %s)",
+                    (name, email, username, password))
 
         # Commit to DB
         mysql.connection.commit()
@@ -150,6 +160,7 @@ def login():
 
     return render_template('login.html')
 
+
 # Check if user logged in
 def is_logged_in(f):
     @wraps(f)
@@ -159,7 +170,9 @@ def is_logged_in(f):
         else:
             flash('Unauthorized, Please login', 'danger')
             return redirect(url_for('login'))
+
     return wrap
+
 
 # Logout
 @app.route('/logout')
@@ -169,6 +182,7 @@ def logout():
     flash('You are now logged out', 'success')
     return redirect(url_for('login'))
 
+
 # Dashboard
 @app.route('/dashboard')
 @is_logged_in
@@ -176,30 +190,32 @@ def dashboard():
     # Create cursor
     cur = mysql.connection.cursor()
 
-    # Get articles
-    #result = cur.execute("SELECT * FROM articles")
-    # Show articles only from the user logged in 
-    result = cur.execute("SELECT * FROM articles WHERE author = %s", [session['username']])
+    # Get citys
+    # result = cur.execute("SELECT * FROM citys")
+    # Show citys only from the user logged in 
+    result = cur.execute("SELECT * FROM citys WHERE author = %s", [session['username']])
 
-    articles = cur.fetchall()
+    citys = cur.fetchall()
 
     if result > 0:
-        return render_template('dashboard.html', articles=articles)
+        return render_template('dashboard.html', citys=citys)
     else:
-        msg = 'No Articles Found'
+        msg = 'No Citys Found'
         return render_template('dashboard.html', msg=msg)
     # Close connection
     cur.close()
 
-# Article Form Class
-class ArticleForm(Form):
+
+# City Form Class
+class CityForm(Form):
     title = StringField('Title', [validators.Length(min=1, max=200)])
 
-# Add Article
-@app.route('/add_article', methods=['GET', 'POST'])
+
+# Add City
+@app.route('/add_city', methods=['GET', 'POST'])
 @is_logged_in
-def add_article():
-    form = ArticleForm(request.form)
+def add_city():
+    form = CityForm(request.form)
     if request.method == 'POST' and form.validate():
         title = form.title.data
 
@@ -207,38 +223,38 @@ def add_article():
         cur = mysql.connection.cursor()
 
         # Execute
-        cur.execute("INSERT INTO articles(title, author) VALUES(%s, %s)",(title, session['username']))
+        cur.execute("INSERT INTO citys(title, author) VALUES(%s, %s)", (title, session['username']))
 
         # Commit to DB
         mysql.connection.commit()
 
-        #Close connection
+        # Close connection
         cur.close()
 
-        flash('Article Created', 'success')
+        flash('City Created', 'success')
 
         return redirect(url_for('dashboard'))
 
-    return render_template('add_article.html', form=form)
+    return render_template('add_city.html', form=form)
 
 
-# Edit Article
-@app.route('/edit_article/<string:id>', methods=['GET', 'POST'])
+# Edit City
+@app.route('/edit_city/<string:id>', methods=['GET', 'POST'])
 @is_logged_in
-def edit_article(id):
+def edit_city(id):
     # Create cursor
     cur = mysql.connection.cursor()
 
-    # Get article by id
-    result = cur.execute("SELECT * FROM articles WHERE id = %s", [id])
+    # Get city by id
+    result = cur.execute("SELECT * FROM citys WHERE id = %s", [id])
 
-    article = cur.fetchone()
+    city = cur.fetchone()
     cur.close()
     # Get form
-    form = ArticleForm(request.form)
+    form = CityForm(request.form)
 
-    # Populate article form fields
-    form.title.data = article['title']
+    # Populate city form fields
+    form.title.data = city['title']
 
     if request.method == 'POST' and form.validate():
         title = request.form['title']
@@ -247,38 +263,40 @@ def edit_article(id):
         cur = mysql.connection.cursor()
         app.logger.info(title)
         # Execute
-        cur.execute ("UPDATE articles SET title=%s WHERE id=%s",(title, id))
+        cur.execute("UPDATE citys SET title=%s WHERE id=%s", (title, id))
         # Commit to DB
         mysql.connection.commit()
 
-        #Close connection
+        # Close connection
         cur.close()
 
-        flash('Article Updated', 'success')
+        flash('City Updated', 'success')
 
         return redirect(url_for('dashboard'))
 
-    return render_template('edit_article.html', form=form)
+    return render_template('edit_city.html', form=form)
 
-# Delete Article
-@app.route('/delete_article/<string:id>', methods=['POST'])
+
+# Delete City
+@app.route('/delete_city/<string:id>', methods=['POST'])
 @is_logged_in
-def delete_article(id):
+def delete_city(id):
     # Create cursor
     cur = mysql.connection.cursor()
 
     # Execute
-    cur.execute("DELETE FROM articles WHERE id = %s", [id])
+    cur.execute("DELETE FROM citys WHERE id = %s", [id])
 
     # Commit to DB
     mysql.connection.commit()
 
-    #Close connection
+    # Close connection
     cur.close()
 
-    flash('Article Deleted', 'success')
+    flash('City Deleted', 'success')
 
     return redirect(url_for('dashboard'))
+
 
 # @app.route('/dash', methods = ['GET', 'POST'])
 # def dash():
@@ -304,17 +322,17 @@ def delete_article(id):
 #
 #     return render_template('dash.html')
 
-@app.route('/dash', methods = ['GET', 'POST'])
+@app.route('/dash', methods=['GET', 'POST'])
 def dash():
     if request.method == 'POST':
         variable = request.form['variable']
         # data = pd.read_csv("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/Crushers.csv")
 
-        with urllib.request.urlopen("http://api.openweathermap.org/data/2.5/find?q=Palo+Alto&units=metrics&type=accurate&mode=csv&APPID=7d5accb7446c447a519bf74d18da15bb") as url:
+        with urllib.request.urlopen(
+                "http://api.openweathermap.org/data/2.5/find?q=Palo+Alto&units=metrics&type=accurate&mode=csv&APPID=7d5accb7446c447a519bf74d18da15bb") as url:
             output = json.load(url)
 
             import matplotlib.pyplot as plt
-
 
             dictionary = json.load(open("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/file.json", 'r'))
             xAxis = [key for key, value in dictionary.items()]
@@ -344,7 +362,6 @@ def dash():
     return render_template('dash.html')
 
 
-
 if __name__ == '__main__':
-    app.secret_key='secret123'
+    app.secret_key = 'secret123'
     app.run(debug=True)

@@ -1,0 +1,10 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Citys</h1>
+  <ul class="list-group">
+    {% for city in citys %}
+      <li class="list-group-item"><a href="city/{{city.id}}">{{city.title}}</a></li>
+    {% endfor %}
+  </ul>
+{% endblock %}
