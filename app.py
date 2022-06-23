@@ -6,7 +6,7 @@ from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
 import pandas as pd
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import os
 import json
 import numpy as np
@@ -78,7 +78,66 @@ def city(id):
     location = geolocator.geocode(address)
     print((location.latitude, location.longitude))
 
-    return render_template('city.html', city=city, la=location.latitude, lo=location.longitude)
+    with urllib.request.urlopen(
+            "http://api.openweathermap.org/data/2.5/forecast/?lat=52.2297&lon=21.0122&units=metric&appid=ce36b67d60e16d696a162ca68027ee1d") as url:
+        dictionary = json.load(url)
+
+        temp = []
+        feels_like = []
+        temp_min = []
+        temp_max = []
+
+        for a in dictionary['list']:
+            temp.append(a['main']['temp'])
+
+        for a in dictionary['list']:
+            feels_like.append(a['main']['feels_like'])
+
+        for a in dictionary['list']:
+            temp_min.append(a['main']['temp_min'])
+
+        for a in dictionary['list']:
+            temp_max.append(a['main']['temp_max'])
+
+        print(temp)
+        print(feels_like)
+        print(temp_min)
+        print(temp_max)
+
+        date = []
+
+        for a in dictionary['list']:
+            date.append(a['dt_txt'])
+
+        print(date)
+
+        fig, ax, = plt.subplots(figsize=(15, 10))
+
+        ax.plot(temp, color='g')
+
+        ticks = [*range(0, 40)]
+        labels = date
+        plt.xticks(ticks, labels)
+        plt.xticks(rotation=90)
+
+        plt.title("Temperatura w " + address +"\n", fontdict={'fontsize': 20})
+        plt.xlabel('\nData i godzina', fontdict={'fontsize': 20})
+        plt.ylabel('Temperatura [\N{DEGREE SIGN}C]\n', fontdict={'fontsize': 20})
+
+        plt.gcf()
+        chart1path = "C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/" + address + "chart1.png"
+        chart2path = "/static/" + address + "chart1.png"
+        plt.savefig(chart1path)
+       # plt.show()
+
+
+
+
+
+
+
+
+    return render_template('city.html', city=city, la=location.latitude, lo=location.longitude, chart=chart2path)
 
 
 # Register Form Class
