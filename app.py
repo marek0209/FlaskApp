@@ -317,11 +317,33 @@ def dash():
         with urllib.request.urlopen("http://api.openweathermap.org/data/2.5/find?q=Palo+Alto&units=metrics&type=accurate&mode=csv&APPID=7d5accb7446c447a519bf74d18da15bb") as url:
             output = json.load(url)
 
+            import matplotlib.pyplot as plt
 
 
+            dictionary = json.load(open("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/file.json", 'r'))
+            xAxis = [key for key, value in dictionary.items()]
+            yAxis = [value for key, value in dictionary.items()]
+            plt.grid(True)
 
+            ## LINE GRAPH ##
+            plt.plot(xAxis, yAxis, color='maroon', marker='o')
+            plt.xlabel('variable')
+            plt.ylabel('value')
 
-        return render_template('img.html', chart=output )
+            ## BAR GRAPH ##
+            fig = plt.figure()
+            plt.bar(xAxis, yAxis, color='maroon')
+            plt.xlabel('variable')
+            plt.ylabel('value')
+            fig.savefig("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/fig.png")
+
+            plt.show()
+
+            with urllib.request.urlopen(
+                    "http://api.openweathermap.org/data/2.5/find?q=Palo+Alto&units=metrics&type=accurate&mode=csv&APPID=7d5accb7446c447a519bf74d18da15bb") as url:
+                output = json.load(url)
+
+        return render_template('img.html', chart="/static/fig.png", json=output)
 
     return render_template('dash.html')
 
