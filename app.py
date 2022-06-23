@@ -194,7 +194,6 @@ def dashboard():
 # Article Form Class
 class ArticleForm(Form):
     title = StringField('Title', [validators.Length(min=1, max=200)])
-    body = TextAreaField('Body', [validators.Length(min=30)])
 
 # Add Article
 @app.route('/add_article', methods=['GET', 'POST'])
@@ -203,13 +202,12 @@ def add_article():
     form = ArticleForm(request.form)
     if request.method == 'POST' and form.validate():
         title = form.title.data
-        body = form.body.data
 
         # Create Cursor
         cur = mysql.connection.cursor()
 
         # Execute
-        cur.execute("INSERT INTO articles(title, body, author) VALUES(%s, %s, %s)",(title, body, session['username']))
+        cur.execute("INSERT INTO articles(title, author) VALUES(%s, %s)",(title, session['username']))
 
         # Commit to DB
         mysql.connection.commit()
@@ -241,17 +239,15 @@ def edit_article(id):
 
     # Populate article form fields
     form.title.data = article['title']
-    form.body.data = article['body']
 
     if request.method == 'POST' and form.validate():
         title = request.form['title']
-        body = request.form['body']
 
         # Create Cursor
         cur = mysql.connection.cursor()
         app.logger.info(title)
         # Execute
-        cur.execute ("UPDATE articles SET title=%s, body=%s WHERE id=%s",(title, body, id))
+        cur.execute ("UPDATE articles SET title=%s WHERE id=%s",(title, id))
         # Commit to DB
         mysql.connection.commit()
 
