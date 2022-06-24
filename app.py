@@ -125,6 +125,7 @@ def city(id):
         plt.ylabel('Temperatura [\N{DEGREE SIGN}C]\n', fontdict={'fontsize': 20})
 
         plt.gcf()
+        plt.subplots_adjust(bottom=0.35)
         chart1path = "C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/" + address + "chart1.png"
         chart2path = "/static/" + address + "chart1.png"
         plt.savefig(chart1path)
