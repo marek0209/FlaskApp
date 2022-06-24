@@ -131,14 +131,31 @@ def city(id):
         plt.savefig(chart1path)
        # plt.show()
 
+    fig, ax, = plt.subplots(figsize=(15, 10))
 
+    ax.plot(temp_min, color='b', label='Minimalna', alpha=0.5)
+    ax.plot(temp_max, color='r', label='Maksymalna', alpha=0.5)
 
+    ticks = [*range(0, 40)]
+    labels = date
+    plt.xticks(ticks, labels)
+    plt.xticks(rotation=90)
 
+    plt.title("Temperatura minimalna i maksymalna w Palo Alto\n", fontdict={'fontsize': 20})
+    plt.xlabel('\nData i godzina', fontdict={'fontsize': 20})
+    plt.ylabel('Temperatura [\N{DEGREE SIGN}C]\n', fontdict={'fontsize': 20})
 
+    plt.legend(fontsize='x-large')
 
+    plt.gcf()
+    plt.subplots_adjust(bottom=0.35)
+    chart3path = "C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/" + address + "chart1.png"
+    chart4path = "/static/" + address + "chart1.png"
+    plt.savefig(chart3path)
 
+    plt.show()
 
-    return render_template('city.html', city=city, la=location.latitude, lo=location.longitude, chart=chart2path)
+    return render_template('city.html', city=city, la=location.latitude, lo=location.longitude, chart=chart2path, secondchart=chart4path)
 
 
 # Register Form Class
@@ -357,69 +374,6 @@ def delete_city(id):
 
     return redirect(url_for('dashboard'))
 
-
-# @app.route('/dash', methods = ['GET', 'POST'])
-# def dash():
-#     if request.method == 'POST':
-#         variable = request.form['variable']
-#         # data = pd.read_csv("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/Crushers.csv")
-#
-#         columns = ['age', 'week', 'opp', 'ACscr', 'OPPscr', 'location']
-#         df = pd.read_csv('C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/Crushers.csv', names=columns)
-#
-#         # This you can change it to whatever you want to get
-#         age_15 = df[df['age'] == 'U15']
-#         # Other examples:
-#         bye = df[df['opp'] == 'Bye']
-#         crushed_team = df[df['ACscr'] == '0']
-#         crushed_visitor = df[df['OPPscr'] == '0']
-#         # Play with this
-#
-#         # Use the .to_html() to get your table in html
-#         print(crushed_visitor.to_html())
-#
-#         return render_template('img.html', chart=crushed_visitor.to_html())
-#
-#     return render_template('dash.html')
-
-@app.route('/dash', methods=['GET', 'POST'])
-def dash():
-    if request.method == 'POST':
-        variable = request.form['variable']
-        # data = pd.read_csv("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/Crushers.csv")
-
-        with urllib.request.urlopen(
-                "http://api.openweathermap.org/data/2.5/find?q=Palo+Alto&units=metrics&type=accurate&mode=csv&APPID=7d5accb7446c447a519bf74d18da15bb") as url:
-            output = json.load(url)
-
-            import matplotlib.pyplot as plt
-
-            dictionary = json.load(open("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/file.json", 'r'))
-            xAxis = [key for key, value in dictionary.items()]
-            yAxis = [value for key, value in dictionary.items()]
-            plt.grid(True)
-
-            ## LINE GRAPH ##
-            plt.plot(xAxis, yAxis, color='maroon', marker='o')
-            plt.xlabel('variable')
-            plt.ylabel('value')
-
-            ## BAR GRAPH ##
-            fig = plt.figure()
-            plt.bar(xAxis, yAxis, color='maroon')
-            plt.xlabel('variable')
-            plt.ylabel('value')
-            fig.savefig("C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/fig.png")
-
-            plt.show()
-
-            with urllib.request.urlopen(
-                    "http://api.openweathermap.org/data/2.5/find?q=Palo+Alto&units=metrics&type=accurate&mode=csv&APPID=7d5accb7446c447a519bf74d18da15bb") as url:
-                output = json.load(url)
-
-        return render_template('img.html', chart="/static/fig.png", json=output)
-
-    return render_template('dash.html')
 
 
 if __name__ == '__main__':
