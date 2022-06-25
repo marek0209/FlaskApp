@@ -76,10 +76,10 @@ def city(id):
     address = city['title']
     geolocator = Nominatim(user_agent="Your_Name")
     location = geolocator.geocode(address)
-    print((location.latitude, location.longitude))
+
 
     with urllib.request.urlopen(
-            "http://api.openweathermap.org/data/2.5/forecast/?lat=52.2297&lon=21.0122&units=metric&appid=ce36b67d60e16d696a162ca68027ee1d") as url:
+            "http://api.openweathermap.org/data/2.5/forecast/?lat=" + str(location.latitude) + "&lon=" + str(location.longitude) + "&units=metric&appid=ce36b67d60e16d696a162ca68027ee1d") as url:
         dictionary = json.load(url)
 
         temp = []
@@ -99,63 +99,85 @@ def city(id):
         for a in dictionary['list']:
             temp_max.append(a['main']['temp_max'])
 
-        print(temp)
-        print(feels_like)
-        print(temp_min)
-        print(temp_max)
 
         date = []
 
         for a in dictionary['list']:
             date.append(a['dt_txt'])
 
-        print(date)
+        def print_first_chart(temp, date):
+            fig, ax, = plt.subplots(figsize=(15, 10))
+            ax.plot(temp, color='g')
 
-        fig, ax, = plt.subplots(figsize=(15, 10))
+            ticks = [*range(0, 40)]
+            labels = date
+            plt.xticks(ticks, labels)
+            plt.xticks(rotation=90)
 
-        ax.plot(temp, color='g')
+            plt.title("Temperatura w " + address + "\n", fontdict={'fontsize': 20})
+            plt.xlabel('\nData i godzina', fontdict={'fontsize': 20})
+            plt.ylabel('Temperatura [\N{DEGREE SIGN}C]\n', fontdict={'fontsize': 20})
 
-        ticks = [*range(0, 40)]
-        labels = date
-        plt.xticks(ticks, labels)
-        plt.xticks(rotation=90)
+            plt.gcf()
+            plt.subplots_adjust(bottom=0.35)
+            chart1path = "C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/" + address + "chart1.png"
+            chart2path = "/static/" + address + "chart1.png"
+            plt.savefig(chart1path)
 
-        plt.title("Temperatura w " + address +"\n", fontdict={'fontsize': 20})
-        plt.xlabel('\nData i godzina', fontdict={'fontsize': 20})
-        plt.ylabel('Temperatura [\N{DEGREE SIGN}C]\n', fontdict={'fontsize': 20})
+            return chart2path
 
-        plt.gcf()
-        plt.subplots_adjust(bottom=0.35)
-        chart1path = "C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/" + address + "chart1.png"
-        chart2path = "/static/" + address + "chart1.png"
-        plt.savefig(chart1path)
-       # plt.show()
+        def print_second_chart(feels_like, date):
+            fig, ax, = plt.subplots(figsize=(15, 10))
+            ax.plot(feels_like, color='y')
 
-    fig, ax, = plt.subplots(figsize=(15, 10))
+            ticks = [*range(0, 40)]
+            labels = date
+            plt.xticks(ticks, labels)
+            plt.xticks(rotation=90)
+            plt.title("Temperatura odczuwalna w " + address + "\n", fontdict={'fontsize': 20})
+            plt.xlabel('\nData i godzina', fontdict={'fontsize': 20})
+            plt.ylabel('Temperatura [\N{DEGREE SIGN}C]\n', fontdict={'fontsize': 20})
+            plt.gcf()
+            plt.subplots_adjust(bottom=0.35)
+            chart1path = "C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/" + address + "chart2.png"
+            chart2path = "/static/" + address + "chart2.png"
+            plt.savefig(chart1path)
 
-    ax.plot(temp_min, color='b', label='Minimalna', alpha=0.5)
-    ax.plot(temp_max, color='r', label='Maksymalna', alpha=0.5)
+            return chart2path
 
-    ticks = [*range(0, 40)]
-    labels = date
-    plt.xticks(ticks, labels)
-    plt.xticks(rotation=90)
+        def print_third_chart(temp_min, temp_max, date):
+            fig, ax, = plt.subplots(figsize=(15, 10))
+            ax.plot(temp_min, color='b', label='Minimalna', alpha=0.5)
+            ax.plot(temp_max, color='r', label='Maksymalna', alpha=0.5)
 
-    plt.title("Temperatura minimalna i maksymalna w Palo Alto\n", fontdict={'fontsize': 20})
-    plt.xlabel('\nData i godzina', fontdict={'fontsize': 20})
-    plt.ylabel('Temperatura [\N{DEGREE SIGN}C]\n', fontdict={'fontsize': 20})
+            ticks = [*range(0, 40)]
+            labels = date
+            plt.xticks(ticks, labels)
+            plt.xticks(rotation=90)
+            plt.title("Temperatura minimalna i maksymalna w " + address + "\n", fontdict={'fontsize': 20})
+            plt.xlabel('\nData i godzina', fontdict={'fontsize': 20})
+            plt.ylabel('Temperatura [\N{DEGREE SIGN}C]\n', fontdict={'fontsize': 20})
 
-    plt.legend(fontsize='x-large')
+            plt.legend(fontsize='x-large')
 
-    plt.gcf()
-    plt.subplots_adjust(bottom=0.35)
-    chart3path = "C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/" + address + "chart1.png"
-    chart4path = "/static/" + address + "chart1.png"
-    plt.savefig(chart3path)
+            plt.gcf()
+            plt.subplots_adjust(bottom=0.35)
+            chart1path = "C:/Users/Marek/Desktop/Projekt_studia_python/FlaskApp/static/" + address + "chart3.png"
+            chart2path = "/static/" + address + "chart3.png"
+            plt.savefig(chart1path)
 
-    plt.show()
+            return chart2path
 
-    return render_template('city.html', city=city, la=location.latitude, lo=location.longitude, chart=chart2path, secondchart=chart4path)
+        print_first_chart(temp, date)
+        print_second_chart(feels_like, date)
+        print_third_chart(temp_min, temp_max, date)
+
+        chartx = print_first_chart(temp, date)
+        chartz = print_second_chart(feels_like, date)
+        charty = print_third_chart(temp_min, temp_max, date)
+
+
+    return render_template('city.html', city=city, la=location.latitude, lo=location.longitude, chart=chartx, secondchart=chartz, thirdchart=charty )
 
 
 # Register Form Class
